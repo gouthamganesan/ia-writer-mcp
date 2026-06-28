@@ -1,0 +1,15 @@
+# Secrets — NEVER commit the real token
+secrets/ia-writer.env
+
+# Live config (the .example template stays tracked)
+ia-attribute.locations.conf
+
+# Backups
+*.bak
+*.bak-*
+
+# macOS / Python cruft
+.DS_Store
+__pycache__/
+*.pyc
+.venv/

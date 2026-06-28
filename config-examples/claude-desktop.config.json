@@ -1,0 +1,13 @@
+{
+  "_comment": "Claude Desktop config. MERGE the `mcpServers` key below into your existing ~/Library/Application Support/Claude/claude_desktop_config.json (keep any other keys you already have, e.g. `preferences`). Replace the absolute paths. Use the ABSOLUTE uv path (GUI apps don't see your shell PATH): `which uv` → /opt/homebrew/bin/uv (Apple Silicon) or /usr/local/bin/uv (Intel). Fully QUIT and reopen Claude Desktop after editing. The `env` proxy block is OPTIONAL (see the Claude Code example).",
+  "mcpServers": {
+    "ia-writer": {
+      "command": "/opt/homebrew/bin/uv",
+      "args": [
+        "run",
+        "--script",
+        "/ABSOLUTE/PATH/TO/ia-writer-mcp/server.py"
+      ]
+    }
+  }
+}

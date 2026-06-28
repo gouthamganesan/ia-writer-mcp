@@ -1,0 +1,18 @@
+{
+  "_comment": "Claude Code project config. Put this (as `.mcp.json`) at the root of the project/repo you work in, OR register globally with `claude mcp add`. Replace the absolute paths. On Apple Silicon uv is /opt/homebrew/bin/uv; on Intel it's /usr/local/bin/uv (run `which uv`). The `env` block is OPTIONAL — only needed if you are behind an HTTP proxy for the FIRST run that downloads the `mcp` package.",
+  "mcpServers": {
+    "ia-writer": {
+      "command": "/opt/homebrew/bin/uv",
+      "args": [
+        "run",
+        "--script",
+        "/ABSOLUTE/PATH/TO/ia-writer-mcp/server.py"
+      ],
+      "env": {
+        "_note_optional_proxy": "delete this env block unless you are behind a proxy",
+        "http_proxy": "http://127.0.0.1:3128",
+        "https_proxy": "http://127.0.0.1:3128"
+      }
+    }
+  }
+}

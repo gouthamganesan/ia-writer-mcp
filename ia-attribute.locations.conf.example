@@ -1,0 +1,14 @@
+# iA Writer Location map for ia-attribute.sh
+#
+# SETUP: copy this file to `ia-attribute.locations.conf` (drop the .example),
+# then add one line per folder you want to edit through attribution.
+#
+# Format:  <LocationName>=<absolute on-disk folder>
+#   - <LocationName> MUST match the Location label shown in iA Writer's sidebar.
+#   - The folder must also be added as a Location in iA Writer itself
+#     (so the ia-writer:// write command can resolve the path).
+#   - Longest matching path prefix wins when a file is under multiple entries.
+#
+# Examples (edit to your own folders, then delete these sample lines):
+# Notes=/Users/you/Documents/Notes
+# Inbox=/Users/you/Documents/Notes/Inbox
