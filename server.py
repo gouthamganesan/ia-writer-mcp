@@ -6,10 +6,18 @@
 """
 iA Writer attribution MCP server.
 
-Exposes the verified `ia-attribute.sh` engine as three MCP tools so any MCP
-client (Claude Code, Claude Desktop, MCP-capable editors) can make its edits to
-iA Writer documents show up as AI-authored (`&AI`) in the file's Markdown
+Exposes the verified `ia-attribute.sh` engine as MCP tools so any MCP client
+(Claude Code, Claude Desktop, MCP-capable editors) can make its edits to iA
+Writer documents show up as AI-authored (`&AI`) in the file's Markdown
 Annotations block.
+
+Tools:
+  - check_attribution   — should edits to this file be routed through iA?
+  - apply_ai_edit       — patch: send the WHOLE new body; tags changed spans &AI.
+  - append_ai_content   — add: send only a CHUNK; appends/prepends it as &AI.
+  - create_ai_document  — create a new file whose whole body is &AI.
+  - open_in_ia          — open a doc in iA for review (no edit, no token).
+  - clear_attribution   — reset all authorship between review rounds.
 
 This is a thin wrapper: all the real work — talking to iA Writer over its
 `ia-writer://` URL command, resolving the on-disk path to an iA Location,
@@ -136,6 +144,93 @@ def apply_ai_edit(file_path: str, new_prose: str, author: str = "AI") -> dict:
         author: Authorship label; defaults to "AI" (→ `&AI`).
     """
     proc = _run(["--file", _abs(file_path), "--author", author], stdin=new_prose)
+    msg = (proc.stdout or proc.stderr).strip()
+    return {
+        "success": proc.returncode == 0,
+        "exit_code": proc.returncode,
+        "message": msg,
+        "hint": _hint_for(proc.returncode),
+    }
+
+
+@mcp.tool()
+def append_ai_content(
+    file_path: str,
+    content: str,
+    author: str = "AI",
+    location: str = "end",
+    padding: str = "paragraph",
+) -> dict:
+    """Append (or prepend) a CHUNK of new content to an existing iA Writer document,
+    attributing the added span to AI (`&AI`).
+
+    Unlike `apply_ai_edit`, send ONLY the new content in `content` — not the whole
+    document. iA inserts it and re-offsets the existing `@human` / `&AI` ranges,
+    tagging just the added span. Use this for accretive work (appending a section,
+    journaling, adding to a running note) where "add this" is the intent rather
+    than "rewrite the doc".
+
+    Args:
+        file_path: Absolute path to the existing .md file (~ is expanded).
+        content: The new chunk to insert (content only, no annotation block).
+        author: Authorship label; defaults to "AI" (→ `&AI`).
+        location: "end" (default) or "beginning".
+        padding: Spacing iA inserts around the chunk — "paragraph" (default),
+            "line", or "sentence".
+    """
+    args = ["--add", "--file", _abs(file_path), "--author", author, "--padding", padding]
+    if location == "beginning":
+        args.append("--prepend")
+    elif location != "end":
+        return {"success": False, "exit_code": 1, "message": "location must be 'end' or 'beginning'", "hint": None}
+    proc = _run(args, stdin=content)
+    msg = (proc.stdout or proc.stderr).strip()
+    return {
+        "success": proc.returncode == 0,
+        "exit_code": proc.returncode,
+        "message": msg,
+        "hint": _hint_for(proc.returncode),
+    }
+
+
+@mcp.tool()
+def create_ai_document(file_path: str, content: str, author: str = "AI") -> dict:
+    """Create a NEW iA Writer document whose entire body is attributed to AI (`&AI`).
+
+    Use this for AI-first drafting ("draft me a new note"). `content` is the whole
+    body of the new file. iA never overwrites an existing file; this tool fails fast
+    if `file_path` already exists (use `apply_ai_edit` to edit an existing file).
+    The file's folder must be a registered iA Location.
+
+    Args:
+        file_path: Absolute path for the new .md file (~ is expanded). Must not exist.
+        content: The full body of the new document (no annotation block).
+        author: Authorship label; defaults to "AI" (→ `&AI`).
+    """
+    proc = _run(["--create", "--file", _abs(file_path), "--author", author], stdin=content)
+    msg = (proc.stdout or proc.stderr).strip()
+    return {
+        "success": proc.returncode == 0,
+        "exit_code": proc.returncode,
+        "message": msg,
+        "hint": _hint_for(proc.returncode),
+    }
+
+
+@mcp.tool()
+def open_in_ia(file_path: str, new_window: bool = False) -> dict:
+    """Open a document in iA Writer so the user can see it (e.g. to review the `&AI`
+    highlights after an edit). Does NOT modify the file and needs no auth token.
+
+    Args:
+        file_path: Absolute path to the .md file (~ is expanded). Must be in an iA
+            Location.
+        new_window: Open in a separate window (macOS).
+    """
+    args = ["--open", "--file", _abs(file_path)]
+    if new_window:
+        args.append("--new-window")
+    proc = _run(args)
     msg = (proc.stdout or proc.stderr).strip()
     return {
         "success": proc.returncode == 0,

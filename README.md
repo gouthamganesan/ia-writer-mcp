@@ -61,13 +61,19 @@ load-bearing gotchas (the `&`-prefix marker; the document owner being implicit).
 └── reference/ia-writer-cli.md         ← deep reference: URL scheme, the &-prefix, token handling
 ```
 
-## The three tools the server exposes
+## The tools the server exposes
 
 | Tool | Use |
 |------|-----|
 | `check_attribution(file_path)` | Before editing: is this file `authored` / `in-location` / `plain`? |
-| `apply_ai_edit(file_path, new_prose, author="AI")` | Apply an edit; send the **full** new body, no annotation block. Tags changed spans `&AI`. |
+| `apply_ai_edit(file_path, new_prose, author="AI")` | Patch an existing file; send the **full** new body, no annotation block. Tags changed spans `&AI`. |
+| `append_ai_content(file_path, content, …)` | Add a **chunk** (append/prepend) without resending the whole document. Tags the added span `&AI`. |
+| `create_ai_document(file_path, content, …)` | Create a **new** file whose whole body is `&AI`. Won't overwrite an existing file. |
+| `open_in_ia(file_path, new_window=False)` | Open a doc in iA Writer to review the `&AI` spans (no edit). |
 | `clear_attribution(file_path)` | Accept current edits; reset all authorship between review rounds. |
+
+The CLI (`ia-attribute.sh`) mirrors these as `--check` / patch (default) / `--add`
+[`--prepend`] / `--create` / `--open` / `--clear`.
 
 ## Requirements
 
@@ -82,8 +88,9 @@ load-bearing gotchas (the `&`-prefix marker; the document owner being implicit).
 - **MCP server** (`server.py`) — for Claude Desktop, Claude Code, and other MCP
   clients. The portable path; see [SETUP.md](SETUP.md).
 - **CLI** (`ia-attribute.sh`) — call the engine directly from any script or shell.
-- **Skill** (`skill/SKILL.md`) — an optional Claude Code skill that auto-detects iA
-  files and routes edits through the engine without the MCP.
+- **Skill** (`skill/SKILL.md`) — a Claude Code skill that auto-routes `.md` edits
+  through the engine. **Copy it to `~/.claude/skills/ia-writer-attribution/SKILL.md`**
+  (and adapt its engine paths) to make it activate — see [SETUP.md](SETUP.md) §6b.
 
 ## License
 

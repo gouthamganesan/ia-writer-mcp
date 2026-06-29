@@ -46,17 +46,39 @@ Then do the following, one step at a time, checking in with me:
        up first; remind me to quit+reopen Desktop).
      - remind me to enable Authorship on the document I want to test.
 
-  E. TEST end-to-end: check_attribution on a test file, a small apply_ai_edit,
+  E. INSTALL THE SKILL so Claude Code uses it automatically (Claude Code users
+     only; skip for Claude-Desktop-only setups). The skill makes Claude Code
+     auto-route .md edits through this tool without me having to ask. Do this:
+       - Create ~/.claude/skills/ia-writer-attribution/ and copy skill/SKILL.md
+         into it as SKILL.md (this global location is auto-discovered; a project
+         .claude/skills/… works too if I prefer per-project).
+       - In that COPIED SKILL.md, replace every engine path (e.g. the
+         `.tools/ia-attribute.sh` examples) with the ABSOLUTE path to the engine
+         in my install dir (<INSTALL_DIR>/ia-attribute.sh), and fix the reference
+         link to point at <INSTALL_DIR>/reference/ia-writer-cli.md. The skill must
+         call the real installed engine.
+       - Confirm with me, then tell me to restart Claude Code so the skill loads.
+
+  F. TEST end-to-end: check_attribution on a test file, a small apply_ai_edit,
      then confirm the edited span shows as &AI in iA Writer. Report any non-zero
      exit code with its hint instead of silently falling back to a direct write.
 
-  F. TEACH me the day-to-day loop: check before editing, apply_ai_edit with the
-     FULL document body (never a fragment, no annotation block), and
-     clear_attribution between review rounds.
+  G. TEACH me the full toolset:
+     - check_attribution  — call before editing any .md.
+     - apply_ai_edit      — patch: send the WHOLE document body (no fragment, no
+                            annotation block).
+     - append_ai_content  — add: send ONLY a new chunk to append/prepend (great
+                            for accretive notes; no whole-body resend).
+     - create_ai_document — start a brand-new AI-authored file.
+     - open_in_ia         — surface a doc in iA so I can review the &AI spans.
+     - clear_attribution  — between review rounds, so the next round's &AI shows
+                            only that round's changes.
 
 Rules: never print/echo my auth token; never apply a direct file write to a file
 that check_attribution reports as authored/in-location (it corrupts the block);
-always send the whole document body to apply_ai_edit. macOS only.
+send the whole document body to apply_ai_edit (use append_ai_content when you only
+mean to add a chunk); create_ai_document only for files that don't exist yet.
+macOS only.
 ```
 
 ---

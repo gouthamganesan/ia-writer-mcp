@@ -9,9 +9,10 @@ package everything lives together in your install folder: `ia-attribute.sh`,
 
 ## MCP server (for Claude Desktop & other MCP clients)
 `server.py` wraps this same `ia-attribute.sh` engine as an MCP server (single-file
-Python, PEP 723, run via `uv run --script`). It exposes three stdio tools —
-`check_attribution`, `apply_ai_edit`, `clear_attribution` — mapping 1:1 to the
-script's modes. The `.sh` stays the single source of truth; the server shells out
+Python, PEP 723, run via `uv run --script`). It exposes six stdio tools —
+`check_attribution`, `apply_ai_edit` (patch), `append_ai_content` (add),
+`create_ai_document` (create), `open_in_ia` (open), `clear_attribution` (replace)
+— mapping 1:1 to the script's modes. The `.sh` stays the single source of truth; the server shells out
 to it and self-locates the script relative to its own path. Wired into **Claude
 Code** via repo-root `.mcp.json` (or `claude mcp add`) and **Claude Desktop** via
 `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -86,15 +87,32 @@ only ever writes `&AI`.)
 #   in-location (0) -> no block yet, but in a configured iA Location (catches fresh notes)
 #   plain       (1) -> neither; edit normally
 
-# apply an edit (pipe the FULL new prose; annotation block stripped automatically)
+# patch: apply an edit (pipe the FULL new prose; annotation block stripped automatically)
 printf '%s' "$NEW_PROSE" | ./ia-attribute.sh --file "<abs path>"
 ./ia-attribute.sh --file "<abs path>" --author "AI" < new-body.md
+
+# add: append/prepend just a CHUNK (mode=add), attributed &AI
+printf '%s' "$CHUNK" | ./ia-attribute.sh --add --file "<abs path>"
+printf '%s' "$CHUNK" | ./ia-attribute.sh --add --prepend --padding paragraph --file "<abs path>"
+
+# create: a NEW AI-authored file (won't overwrite; fails if it exists)
+printf '%s' "$BODY" | ./ia-attribute.sh --create --file "<abs path>"
+
+# open: surface the doc in iA for review (no token needed; file untouched)
+./ia-attribute.sh --open [--new-window] --file "<abs path>"
 
 # accept/clear ALL authorship -> owner default (between review iterations)
 ./ia-attribute.sh --clear --file "<abs path>"
 ```
-Exit codes: `0` ok · `2` iA didn't modify the file (not running / not in a Location
-/ bad token) · `3` changed but no `&AI` (Authorship off for that doc).
+Exit codes: `0` ok · `2` iA didn't modify/create the file (not running / not in a
+Location / bad token) · `3` changed but no `&AI` (Authorship off for that doc).
+
+### patch vs add (when to use which)
+- **patch** (`apply_ai_edit`): in-place edits/rewrites. You reconstruct and send
+  the WHOLE body; iA diffs it. Right when changes are scattered through the doc.
+- **add** (`append_ai_content`): accretive writing. You send ONLY the new chunk;
+  iA appends/prepends it. Cheaper, avoids the whole-body resend and the ~1 MB
+  `ARG_MAX` ceiling, and is the natural fit for "add a section / a journal entry".
 
 ### clear (`--clear`) — for the iterative review loop
 Re-writes the doc's current prose via `mode=replace` with **no author**, which

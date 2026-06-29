@@ -90,7 +90,23 @@ paths. Verify with `/mcp` (or `claude mcp list`).
 Merge the `mcpServers` block from `config-examples/claude-desktop.config.json`
 into `~/Library/Application Support/Claude/claude_desktop_config.json` (keep any
 existing keys). Fill in the two absolute paths. **Fully quit and reopen** Claude
-Desktop. The `ia-writer` server with three tools should appear in Settings.
+Desktop. The `ia-writer` server with its six tools should appear in Settings.
+
+## 6b. (Claude Code only) Install the skill so it activates automatically
+
+The MCP exposes the tools, but Claude Code won't *automatically* route your `.md`
+edits through them unless the skill is installed in a skills directory. Shipping
+`skill/SKILL.md` in the repo is **not** enough — it must be copied into place:
+
+```bash
+mkdir -p ~/.claude/skills/ia-writer-attribution
+cp skill/SKILL.md ~/.claude/skills/ia-writer-attribution/SKILL.md   # global; or <project>/.claude/skills/…
+```
+
+Then **edit the copy** and replace its example engine paths (e.g.
+`.tools/ia-attribute.sh`) with the absolute `<INSTALL_DIR>/ia-attribute.sh`, and
+repoint the reference link to `<INSTALL_DIR>/reference/ia-writer-cli.md`. Restart
+Claude Code so it loads the skill. (Skip this step for a Desktop-only setup.)
 
 ## 7. Live test
 

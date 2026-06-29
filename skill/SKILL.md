@@ -115,7 +115,21 @@ Guidance:
   changes — not silently mid-round. If unsure whether they're done reviewing, ask.
 - `--clear` is a **no-op** if there's no AI attribution (prints `nothing to clear`).
 - It clears *all* authorship, not just AI. That's intended ("accept everything so far"); since
-  only `&AI` is visually flagged, his own text looks the same either way.
+  only `&AI` is visually flagged, your own text looks the same either way.
+
+## Other engine modes (besides patch)
+
+The same engine supports more than in-place patching — prefer the one that matches
+the intent:
+
+- **Append/prepend a chunk** (don't resend the whole doc):
+  `printf '%s' "$CHUNK" | <engine> --add [--prepend] --file "<abs path>"`
+- **Create a new AI-authored file** (won't overwrite):
+  `printf '%s' "$BODY" | <engine> --create --file "<abs path>"`
+- **Open a doc for review** (no edit): `<engine> --open --file "<abs path>"`
+
+Use `--add` instead of patch when you only mean to *append* content — it's cheaper
+and avoids reconstructing the entire document.
 
 ## Hard rules
 

@@ -25,7 +25,7 @@ across any MCP client.
 
 ```
 MCP client (Claude Code / Claude Desktop / editor)
-   │  stdio (JSON-RPC), three tools
+   │  stdio (JSON-RPC), six tools
    ▼
 server.py        ← thin Python wrapper (FastMCP). PEP 723 single-file script,
    │               run by `uv run --script` (uv auto-installs `mcp`, Python ≥3.10)
@@ -47,17 +47,29 @@ the `.sh`. The server only: exposes structured tools, passes prose as a real
 argument (not shell-piped), and gives non-CLI clients (Claude Desktop) a way in.
 When debugging, suspect configuration/environment first, not the server code.
 
-## 3. The three tools
+## 3. The tools
 
 - **`check_attribution(file_path)`** → `{status, should_attribute}`.
   `status` is `authored` (has a block) / `in-location` (no block yet, but in a
   registered iA Location) / `plain` (neither). Call this BEFORE editing any `.md`.
   Only route through the MCP when `should_attribute` is true.
-- **`apply_ai_edit(file_path, new_prose, author="AI")`** → applies the edit.
+- **`apply_ai_edit(file_path, new_prose, author="AI")`** → patch an existing file.
   **`new_prose` must be the COMPLETE new document body** (the whole file with the
   change), **without** the trailing annotation block. iA diffs full text; a
   fragment would look like a mass deletion. Returns `{success, exit_code,
   message, hint}`.
+- **`append_ai_content(file_path, content, author="AI", location="end", padding="paragraph")`**
+  → add a CHUNK (mode=add). Send ONLY the new content, not the whole body; iA
+  appends (or prepends, `location="beginning"`) it and tags just the added span
+  `&AI`. Use for accretive work; avoids the whole-document resend that `apply_ai_edit`
+  requires. The mental model: **`apply_ai_edit` = edit-in-place (whole body);
+  `append_ai_content` = grow (chunk only).**
+- **`create_ai_document(file_path, content, author="AI")`** → create a NEW file
+  whose entire body is `&AI` (mode=create). Fails fast if the file already exists
+  (iA's create never overwrites). For AI-first drafting.
+- **`open_in_ia(file_path, new_window=False)`** → open a doc in iA for review
+  (interface command; no edit, no token). Handy to surface the `&AI` spans after
+  an edit.
 - **`clear_attribution(file_path)`** → resets ALL authorship to owner-default
   (drops `&AI`/`@human` marks; prose unchanged). Used between review rounds so the
   next round's `&AI` shows only the latest changes. No-op if nothing is attributed.
@@ -109,6 +121,14 @@ Walk them through **SETUP.md** step by step. The steps most likely to trip them:
    can launch the server offline; behind a proxy, set `http_proxy`/`https_proxy`.
 5. **Secret** — they create `secrets/ia-writer.env` from the `.example`. Never
    read it back to them or echo it; the tooling reads it silently.
+6. **Install the skill (Claude Code users)** — so Claude Code routes `.md` edits
+   through the tool *automatically*, copy `skill/SKILL.md` to
+   `~/.claude/skills/ia-writer-attribution/SKILL.md` (global; or a project
+   `.claude/skills/…` for per-project). **Then edit the COPY** to replace its
+   example engine paths (e.g. `.tools/ia-attribute.sh`) with the absolute
+   `<INSTALL_DIR>/ia-attribute.sh`, and repoint its reference link. Without this
+   copy step the skill never activates — shipping it in the repo is not enough.
+   Tell them to restart Claude Code so it loads. Skip for Desktop-only setups.
 
 Verify with the live test in SETUP.md §7: `check_attribution` then a small
 `apply_ai_edit`, then look for the `&AI` colour in iA Writer.
@@ -117,9 +137,11 @@ Verify with the live test in SETUP.md §7: `check_attribution` then a small
 
 - **`reference/ia-writer-cli.md`** — the deep reference: full URL scheme, params,
   the `&`-prefix details, path/Location mapping, token handling, size limits.
-- **`skill/SKILL.md`** — an OPTIONAL Claude Code skill that auto-detects iA files
-  and routes edits through the same engine *without* the MCP. Useful only inside
-  Claude Code; ignore it for an MCP-only setup.
+- **`skill/SKILL.md`** — a Claude Code skill that auto-detects iA files and routes
+  edits through the same engine *without* the MCP. To make it activate it must be
+  COPIED to `~/.claude/skills/ia-writer-attribution/SKILL.md` (or a project
+  `.claude/skills/…`) and its engine paths adapted — see §7 step 6. Useful only
+  inside Claude Code; ignore for an MCP-only / Desktop-only setup.
 - **`server.py`** / **`ia-attribute.sh`** — both are short and commented; read the
   source when a behaviour is unclear.
 
