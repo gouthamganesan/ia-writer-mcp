@@ -24,8 +24,8 @@ you end-to-end:
 1. **Clone** this repo and open it in an AI session with shell + file access
    (e.g. run `claude` inside the folder):
    ```bash
-   git clone https://github.com/gouthamganesan/ia-writer-authorship-mcp.git
-   cd ia-writer-authorship-mcp
+   git clone https://github.com/gouthamganesan/ia-writer-mcp.git
+   cd ia-writer-mcp
    ```
 2. **Paste the setup prompt** from **[INSTALL-PROMPT.md](INSTALL-PROMPT.md)** into
    your assistant. It will read the package, explain it, check prerequisites,
@@ -100,6 +100,6 @@ affiliated with or endorsed by iA Inc.** "iA Writer" is a trademark of its owner
 > ⚠️ **A small note:** this package — code and docs — was built with substantial
 > AI assistance. It's been tested end-to-end on the author's machine, but please
 > read the source (it's short and commented) before trusting it with your writing,
-> and **[open an issue](https://github.com/gouthamganesan/ia-writer-authorship-mcp/issues)**
+> and **[open an issue](https://github.com/gouthamganesan/ia-writer-mcp/issues)**
 > if anything is wrong, unclear, or could be better. Contributions and bug reports
 > are very welcome.
